@@ -1,0 +1,7 @@
+{
+  "DISCORD_TOKEN":"token-goes-here",
+  "COMMAND_PREFIX": "$",
+  "CLIENT_ID":"client-id-goes-here",
+  "CLIENT_SECRET":"client-secret-goes-here",
+  "USER_AGENT": "platform:program-name:rest of user agent"
+}
