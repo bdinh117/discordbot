@@ -42,7 +42,10 @@ async def hello(ctx):
 
     await ctx.channel.send('Hello, ' + ctx.author.name + "!")
 
-
+@bot.event
+async def on_command_error(ctx,error):
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send(f'"{ctx.prefix+ctx.invoked_with}" command not found')
 
 
 # getting fields of a submission instance
@@ -76,6 +79,7 @@ async def hello(ctx):
 for filename in os.listdir("./cogs"):
     if filename.endswith(".py"):
         bot.load_extension(f"cogs.{filename[:-3]}")
+
 
 
 bot.run(config['DISCORD_TOKEN'])  # the token

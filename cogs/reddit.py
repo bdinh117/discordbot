@@ -62,13 +62,14 @@ class Reddit(commands.Cog):
             if (len(monitors_per_user[ctx.author.id]) < MAX_MONITORS):
                 monitors_per_user[ctx.author.id].append(monitor_data)
                 monitors_per_user[ctx.author.id][-1][0].start(subreddit, keywords, ctx)
+                await ctx.channel.send(f"Started monitoring subreddits: {subreds} for keywords: {keywords}")
             else:
                 await ctx.channel.send("Cannot create anymore streams. User reached maximum limit of 4 monitor streams")
         else:
             monitors_per_user[ctx.author.id] = [monitor_data]
             monitors_per_user[ctx.author.id][-1][0].start(subreddit, keywords, ctx)
+            await ctx.channel.send(f"Started monitoring subreddits: {subreds} for keywords: {keywords}")
 
-            print(type(monitors_per_user[ctx.author.id]))
 
         # monitor_data[tpl]=tasks.loop(seconds=60)(process_post)
         # monitor_loops[tpl].start(subreddit,keywords,ctx)
@@ -140,6 +141,9 @@ async def process_posts(subreddit,keywords,ctx):
         await ctx.channel.send("WOWOWOWOWOWOW")
         raise asyncio.CancelledError
 
+    except (asyncprawcore.exceptions.ServerError):
+        await ctx.channel.send("server error")
+        asyncio.sleep(10)
     # except asyncprawcore.exceptions.RequestException as e:
     #     #traceback.print_exc()
     #     traceback.print_exc()
