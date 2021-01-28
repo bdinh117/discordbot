@@ -4,25 +4,15 @@
 import discord # documentation here: https://discordpy.readthedocs.io/en/latest/api.html
 from discord.ext import commands,tasks
 import os
-
-import string  # for removing punctuation
-import shlex  # want shlex.split(), so we dont split on separators within double quotes
-
-import time
-import asyncio
-import traceback
-import asyncprawcore
 import json
 
+#Open the config.json file for all the keys.
 with open('config.json') as f:
     config=json.load(f)
 
 
-
 # create an instance of Client object. our bot. can also use commands.bot instead to make it easier to do commands
 bot = commands.Bot(command_prefix=config['COMMAND_PREFIX'])
-
-
 
 @bot.event
 async def on_ready():  # triggers when bot turns on
@@ -42,40 +32,13 @@ async def hello(ctx):
 
     await ctx.channel.send('Hello, ' + ctx.author.name + "!")
 
+#error handler for errors raised inside a command
 @bot.event
 async def on_command_error(ctx,error):
     if isinstance(error, commands.CommandNotFound):
         await ctx.send(f'"{ctx.prefix+ctx.invoked_with}" command not found')
 
-
-# getting fields of a submission instance
-# for submission in reddit.subreddit("xboxone").new(limit=1):
-#     id=submission.id
-#     dict=vars(submission)
-#     for key in dict:
-#         print(key+":",end=" ")
-#         print(dict[key])
-#         # if(key=="preview"):
-#         #     print("WHAT SI THIS -----------------",dict[key]["images"][0]["source"]["url"])
-#         #     break
-
-# print(time.time())
-
-# async def process_posts(subreddits,keywords,message):
-#     for submission in subreddits.stream.submissions():
-#         # print(time.time())
-#         if (
-#                 time.time() - submission.created_utc <= 540):  # make it so when we give the command, we don't get notified of older posts. current-time_created (in unix)
-#             s = submission.title.translate(str.maketrans('', '', string.punctuation))  # remove punctuation from title
-#             print(s, "-----FROM: r/" + submission.subreddit.display_name)
-#             title = s.lower().split()  # make title lowercase and split it word by word
-#             for word in title:  # Check if every word in the title is in the list of keywords
-#                 if word in keywords:
-#                     await message.channel.send(
-#                         "TITLE: " + submission.title + submission.url + "\n" + "https://old.reddit.com" + submission.permalink + "\nhttps://redeem.microsoft.com/")  # if so, send a message in the channel
-#                     break
-
-
+#load all cogs and their commands
 for filename in os.listdir("./cogs"):
     if filename.endswith(".py"):
         bot.load_extension(f"cogs.{filename[:-3]}")

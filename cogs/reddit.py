@@ -18,10 +18,9 @@ reddit= asyncpraw.Reddit(
     client_secret=config['CLIENT_SECRET'],
     user_agent=config['USER_AGENT']
 )
-#monitor_loops=[] #holds the task loops for each of the user's monitor commands
-#monitor_data=[]#For every monitor stream, holds subreddits being monitored and search keywords
-monitors_per_user={}
-MAX_MONITORS=4
+
+monitors_per_user={} #dict to hold every unique user's monitor loops
+MAX_MONITORS=4 #set limit of monitor streams per user.
 
 
 class Reddit(commands.Cog):
@@ -32,9 +31,6 @@ class Reddit(commands.Cog):
     @commands.command()
     async def monitor(self, ctx):
         msg = ctx.message.content.split(" ", maxsplit=1)
-
-        # TODO .strip() ?
-        # TODO handle punctuation in keywords
 
         # Formatting of Command:
         # $monitor,<subreddit(s)> separated by space,keywords separated by space
@@ -55,12 +51,12 @@ class Reddit(commands.Cog):
         print("Subreddits being searched through:", msg[0])
         print("Search Keywords:", keywords)
 
-        loopObj = tasks.loop(seconds=60)(process_posts)
+        loopObj = tasks.loop(seconds=60)(process_posts) #a loop object made from the process_posts coroutine
         tpl = (subreddit, keywords)
         monitor_data = (loopObj, tpl)
         if ctx.author.id in monitors_per_user:
             if (len(monitors_per_user[ctx.author.id]) < MAX_MONITORS):
-                monitors_per_user[ctx.author.id].append(monitor_data)
+                monitors_per_user[ctx.author.id].append(monitor_data) #monitors_per_user dict contains a tpl of a loopObj and the command details: (loop,(subred,keywords))
                 monitors_per_user[ctx.author.id][-1][0].start(subreddit, keywords, ctx)
                 await ctx.channel.send(f"Started monitoring subreddits: {subreds} for keywords: {keywords}")
             else:
@@ -71,12 +67,8 @@ class Reddit(commands.Cog):
             await ctx.channel.send(f"Started monitoring subreddits: {subreds} for keywords: {keywords}")
 
 
-        # monitor_data[tpl]=tasks.loop(seconds=60)(process_post)
-        # monitor_loops[tpl].start(subreddit,keywords,ctx)
     @commands.command()
-    async def listM(self, ctx):
-        # estTimeDelta=timedelta(hours=-5)
-        # estTimezone= timezone(estTimeDelta,name="EST")
+    async def listM(self, ctx):#Check the list of current subreddit streams
         embed = discord.Embed(
             title="Subreddit Streams",
             type="rich",
@@ -85,19 +77,19 @@ class Reddit(commands.Cog):
             timestamp=datetime.utcnow(),  # .replace(tzinfo=estTimezone),
             colour=discord.Colour.dark_red())
 
-        all_streams = monitors_per_user[ctx.author.id]
+        all_streams = monitors_per_user[ctx.author.id] #all streams a user is monitoring
         for i in range(len(all_streams)):
             embed.add_field(name=f"Stream #{i + 1}",
                             value=f"Subreddits: {all_streams[i][1][0]}\nKeywords: {all_streams[i][1][1]}",
                             inline=False)
 
-        await ctx.channel.send(content="WOWEE Clapper, Does this work?", embed=embed)
+        await ctx.channel.send(content="Here all the streams you are monitoring:", embed=embed)
 
-    @commands.command()  # $StopMonitoring stream #n
+    @commands.command()  # $cancel a stream
     async def stopM(self,ctx):
         msg = ctx.message.content.strip().split()
         n = int(msg[1]) - 1
-        monitors_per_user[ctx.author.id][n][0].cancel()
+        monitors_per_user[ctx.author.id][n][0].cancel() #cancel() instead of stop() because , may be monitoring high density stream like r/all where will never get the next iteration
 
         del monitors_per_user[ctx.author.id][n]
         await ctx.channel.send(f"Stopped monitoring subreddit stream #{n + 1}")
@@ -108,7 +100,7 @@ def setup(bot):
 async def process_posts(subreddit,keywords,ctx):
     print(f"----------------------we looping agane?(at {datetime.utcfromtimestamp(time.time())})----------------------------")
     try:
-        async for submission in subreddit.stream.submissions(pause_after=7,skip_existing=True):#maybe use new posts instead of stream
+        async for submission in subreddit.stream.submissions(pause_after=7,skip_existing=True):
             # print(time.time())
             if(submission is None):
                 print(f"!!!!!!!!Submission is None, meaning no new submissions, so lets break(at {datetime.utcfromtimestamp(time.time())})!!!!!!!!!")
@@ -120,8 +112,7 @@ async def process_posts(subreddit,keywords,ctx):
 
             if (time.time() - submission.created_utc <= 60):  # make it so when we give the command, we don't get notified of older posts. current-time_created (in unix)
                 s = submission.title.translate(str.maketrans('', '', string.punctuation))  # remove punctuation from title
-                print(s, "-----FROM: r/" + submission.subreddit.display_name,
-                      "AT: " + utc_time)
+                print(s, "-----FROM: r/" + submission.subreddit.display_name,"AT: " + utc_time)
                 title = s.lower().split()  # make title lowercase and split it word by word
                 for word in title:  # Check if every word in the title is in the list of keywords
                     if word in keywords:
@@ -144,13 +135,6 @@ async def process_posts(subreddit,keywords,ctx):
     except (asyncprawcore.exceptions.ServerError):
         await ctx.channel.send("server error")
         asyncio.sleep(10)
-    # except asyncprawcore.exceptions.RequestException as e:
-    #     #traceback.print_exc()
-    #     traceback.print_exc()
-    #     print(repr(e))
-    #     print('cancel_me(): cancel sleep')
-    #     print(e)
-    #     #raise asyncprawcore.exceptions.RequestException(e.original_exception,e.request_args,e.request_kwargs)
-    #     raise asyncio.CancelledError
+
 
 #https://stackoverflow.com/questions/56052748/python-asyncio-task-cancellation
