@@ -122,11 +122,12 @@ async def process_posts(subreddit,keywords,ctx):
                             timestamp=datetime.utcnow(),  # .replace(tzinfo=estTimezone),
                             colour=discord.Colour.green(),
                         )
-                        embed.set_footer(text=f"POSTED AT: {utc_time}",icon_url="https://i.kym-cdn.com/photos/images/masonry/001/734/410/676.jpg")
-                        embed.set_image(url=submission.url)
+                        embed.set_footer(text=f"POSTED ON REDDIT AT: {utc_time} UTC",icon_url="https://i.kym-cdn.com/photos/images/masonry/001/734/410/676.jpg")
+                        if(submission.url.startswith("http")):
+                            embed.set_image(url=submission.url)
                         embed.set_thumbnail(url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-qE0SRu_wMaDHaL0IGTygrvqejB4CMIatLQ&usqp=CAU")
                         embed.add_field(
-                            name=submission.title, value=f"{submission.url}\n\nhttps://old.reddit.com/{submission.permalink}\n\nhttps://redeem.microsoft.com/",inline=False
+                            name=submission.title[:255], value=f"{submission.url}\n\nhttps://old.reddit.com/{submission.permalink}\n\nhttps://redeem.microsoft.com/",inline=False
                         )
                         await ctx.send("1 result from your search: ",embed=embed)
                         break
