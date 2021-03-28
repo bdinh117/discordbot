@@ -138,9 +138,10 @@ async def process_posts(subreddit,keywords,ctx):
         await ctx.channel.send("WOWOWOWOWOWOW")
         raise asyncio.CancelledError
 
-    except (asyncprawcore.exceptions.ServerError):
+    except (asyncprawcore.exceptions.ServerError, asyncprawcore.exceptions.ResponseException):
         await ctx.channel.send("server error")
         asyncio.sleep(10)
+
 
 
 #https://stackoverflow.com/questions/56052748/python-asyncio-task-cancellation
